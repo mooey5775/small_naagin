@@ -1,12 +1,12 @@
-#ifdef AQS_PRESENT
-#include <SparkFunCCS811.h>
-#endif
-
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Servo.h>
 
 #include "definitions0.h"
+
+#ifdef AQS_PRESENT
+#include <SparkFunCCS811.h>
+#endif
 
 // Connect to the WiFi
 const char* ssid = "CMU-DEVICE";
@@ -212,14 +212,16 @@ void air(String payload) {
     return;
   }
 
-  char* co2_mess = (char*)malloc(sizeof(char) * 6);
+  char* co2_mess = (char*)malloc(sizeof(char) * 12);
   char* tvoc_mess = (char*)malloc(sizeof(char) * 6);
 
   String(co2).toCharArray(co2_mess, 6);
   String(tvoc).toCharArray(tvoc_mess, 6);
 
-  client.publish("robot_return/" ESP_ID "/air/co2", co2_mess);
-  client.publish("robot_return/" ESP_ID "/air/tvoc", tvoc_mess);
+  strcat(co2_mess, " ");
+  strcat(co2_mess, tvoc_mess);
+
+  client.publish("robot_return/" ESP_ID "/air", co2_mess);
 
   free(co2_mess);
   free(tvoc_mess);
@@ -274,11 +276,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
     distance(payloadStr);
    } else if (topicStr.equals("raw_left")) {
     raw_left(payloadStr);
-   } else if (topicStr.equqls("raw_right")) {
+   } else if (topicStr.equals("raw_right")) {
     raw_right(payloadStr);
    #ifdef AQS_PRESENT
    } else if (topicStr.equals("air")) {
     air(payloadStr);
+   #else
+   } else if (topicStr.equals("air")) {
+    client.publish("robot_return/" ESP_ID "/air", "nc");
    #endif
    } else {
     Serial.println("Invalid command");
