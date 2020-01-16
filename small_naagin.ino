@@ -10,7 +10,7 @@
 
 // Connect to the WiFi
 const char* ssid = "CMU-DEVICE";
-const char* mqtt_server = "api.daybook.space";
+const char* mqtt_server = "35.243.178.248";
  
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -165,6 +165,25 @@ void distance(String payload) {
   free(pub_mess);
 }
 
+void raw_left(String payload) {
+  int speed_ = payload.toInt();
+
+  Serial.print("Setting left wheel to speed ");
+  Serial.println(payload);
+
+  left_servo.write(speed_);
+}
+
+void raw_right(String payload) {
+  int speed_ = payload.toInt();
+
+  Serial.print("Setting right wheel to speed ");
+  Serial.println(payload);
+
+  right_servo.write(speed_);
+}
+
+
 #ifdef AQS_PRESENT
 void air(String payload) {
   if (!aqs_available) {
@@ -253,6 +272,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     home_servos();
    } else if (topicStr.equals("distance")) {
     distance(payloadStr);
+   } else if (topicStr.equals("raw_left")) {
+    raw_left(payloadstr);
+   } else if (topicStr.equqls("raw_right")) {
+    raw_right(payloadStr);
    #ifdef AQS_PRESENT
    } else if (topicStr.equals("air")) {
     air(payloadStr);
