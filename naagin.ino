@@ -1,9 +1,12 @@
+#ifdef AQS_PRESENT
 #include <SparkFunCCS811.h>
+#endif
+
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Servo.h>
 
-#include "definitions.h"
+#include "definitions0.h"
 
 // Connect to the WiFi
 const char* ssid = "CMU-DEVICE";
