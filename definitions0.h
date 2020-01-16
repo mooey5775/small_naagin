@@ -10,7 +10,7 @@
 #define DIST_ECHO 13
 
 #define LEFT_ZERO 90
-#define RIGHT_ZERO 90
+#define RIGHT_ZERO 92
 
 #define LOCKED_POS 90
 #define UNLOCKED_POS 0

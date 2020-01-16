@@ -198,6 +198,9 @@ void air(String payload) {
 
   client.publish("robot_return/" ESP_ID "/air/co2", co2_mess);
   client.publish("robot_return/" ESP_ID "/air/tvoc", tvoc_mess);
+
+  free(co2_mess);
+  free(tvoc_mess);
 }
 #endif
 
