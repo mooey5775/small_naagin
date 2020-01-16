@@ -273,7 +273,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
    } else if (topicStr.equals("distance")) {
     distance(payloadStr);
    } else if (topicStr.equals("raw_left")) {
-    raw_left(payloadstr);
+    raw_left(payloadStr);
    } else if (topicStr.equqls("raw_right")) {
     raw_right(payloadStr);
    #ifdef AQS_PRESENT
