@@ -9,6 +9,9 @@
 #define DIST_TRIG 12
 #define DIST_ECHO 13
 
+#define AQS_PRESENT
+#define AQS_ADDR 0x5B
+
 #define LEFT_ZERO 90
 #define RIGHT_ZERO 90
 

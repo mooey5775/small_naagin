@@ -1,3 +1,4 @@
+#include <SparkFunCCS811.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Servo.h>
@@ -16,6 +17,13 @@ Servo right_servo;
 Servo pitch_servo;
 Servo yaw_servo;
 Servo lock_servo;
+
+#ifdef AQS_PRESENT
+CCS811 aqs(AQS_ADDR);
+bool aqs_available = false;
+int co2 = -1;
+int tvoc = -1;
+#endif
 
 void lock(String payload) {
   int lock_state = payload.toInt();
@@ -149,10 +157,49 @@ void distance(String payload) {
 
   String(distance).toCharArray(pub_mess, 5);
 
-  client.publish("robot_cmd/" ESP_ID "/dist_return", pub_mess);
+  client.publish("robot_return/" ESP_ID "/distance", pub_mess);
 
   free(pub_mess);
 }
+
+#ifdef AQS_PRESENT
+void air(String payload) {
+  if (!aqs_available) {
+    Serial.println("Air quality sensor not connected!");
+  }
+  
+  Serial.println("Getting air quality data...");
+  if (aqs.dataAvailable())
+  {
+    //If so, have the sensor read and calculate the results.
+    //Get them later
+    aqs.readAlgorithmResults();
+
+    Serial.print("CO2[");
+    //Returns calculated CO2 reading
+    co2 = aqs.getCO2();
+    Serial.print(co2);
+    Serial.print("] tVOC[");
+    //Returns calculated TVOC reading
+    tvoc = aqs.getTVOC();
+    Serial.print(tvoc);
+    Serial.println();
+  } else if (co2 == -1 || tvoc == -1) {
+    Serial.println("Data unavailable");
+    client.publish("robot_return/" ESP_ID "/air", "data_unavailable");
+    return;
+  }
+
+  char* co2_mess = (char*)malloc(sizeof(char) * 6);
+  char* tvoc_mess = (char*)malloc(sizeof(char) * 6);
+
+  String(co2).toCharArray(co2_mess, 6);
+  String(tvoc).toCharArray(tvoc_mess, 6);
+
+  client.publish("robot_return/" ESP_ID "/air/co2", co2_mess);
+  client.publish("robot_return/" ESP_ID "/air/tvoc", tvoc_mess);
+}
+#endif
 
 void callback(char* topic, byte* payload, unsigned int length) {
    Serial.print("Message arrived [");
@@ -200,6 +247,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     home_servos();
    } else if (topicStr.equals("distance")) {
     distance(payloadStr);
+   #ifdef AQS_PRESENT
+   } else if (topicStr.equals("air")) {
+    air(payloadStr);
+   #endif
    } else {
     Serial.println("Invalid command");
    }
@@ -247,6 +298,20 @@ void setup_ultrasonic() {
   pinMode(DIST_ECHO, INPUT);
 }
 
+#ifdef AQS_PRESENT
+void setup_aqs() {
+  Serial.print("Setting up air quality sensor... ");
+  if (!aqs.begin()) {
+    Serial.println("FAILED to start sensor! Check wiring. AQS disabled.");
+    return;
+  }
+
+  aqs_available = true;
+  Serial.println("Connected!");
+  aqs.setDriveMode(1);
+}
+#endif
+
 void reconnect() {
    // Loop until we're reconnected
    while (!client.connected()) {
@@ -272,18 +337,24 @@ void setup()
  Serial.begin(115200);
 
  Serial.println("-----NAAGIN COMPUTE MODULE RESET-----");
- Serial.println("Naagin Firmware v1.01");
+ Serial.println("Naagin Firmware v1.02");
  Serial.println("This is Naagin " ESP_ID);
 
- setup_wifi();
- 
- client.setServer(mqtt_server, 1883);
- client.setCallback(callback);
- reconnect();
+#ifdef AQS_PRESENT
+ Serial.println("INFO: Air Quality Sensor is set to installed");
+#endif
 
+ setup_wifi();
  setup_servos();
  setup_ultrasonic();
  home_servos();
+ 
+#ifdef AQS_PRESENT
+ setup_aqs();
+#endif
+ 
+ client.setServer(mqtt_server, 1883);
+ client.setCallback(callback);
 }
  
 void loop()
