@@ -12,6 +12,9 @@
 #define LEFT_ZERO 90
 #define RIGHT_ZERO 92
 
+#define AQS_PRESENT
+#define AQS_ADDR 0x5B
+
 #define LOCKED_POS 90
 #define UNLOCKED_POS 0
 
