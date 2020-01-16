@@ -10,7 +10,7 @@
 
 // Connect to the WiFi
 const char* ssid = "CMU-DEVICE";
-const char* mqtt_server = "edwards-mac-device.wifi.local.cmu.edu";
+const char* mqtt_server = "api.daybook.space";
  
 WiFiClient espClient;
 PubSubClient client(espClient);
